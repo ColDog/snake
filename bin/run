@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cd src/
+FLASK_APP=main.py FLASK_DEBUG=1 flask run -p 9000 --host=0.0.0.0
