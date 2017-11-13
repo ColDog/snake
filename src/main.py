@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
-from game import Game
-from decider import RandomDecider
+
+import decider
+import game
 
 app = Flask(__name__)
 games = {}
@@ -19,15 +20,19 @@ def index():
 @app.route("/start", methods=["POST"])
 def start():
     data = request.json
-    data['decider'] = RandomDecider
-    game = Game(**data)
-    games[data['game_id']] = game
+    data['decider'] = decider.WeightedDecider
+    current_game = game.Game(**data)
+    games[data['game_id']] = current_game
     return jsonify({"name": "test", "color": "#111"})
 
 
 @app.route("/move", methods=["POST"])
 def move():
     data = request.json
-    game = games[data['game_id']]
-    move = game.move(**data)
+    current_game = games[data['game_id']]
+    move = current_game.move(
+        you=data['you'],
+        food=data['food'],
+        snakes=data['snakes'],
+    )
     return jsonify({"move": move})

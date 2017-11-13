@@ -6,10 +6,6 @@ import game
 
 
 class Decider:
-    UP = 'up'
-    DOWN = 'down'
-    LEFT = 'left'
-    RIGHT = 'right'
 
     def __init__(self, game):
         self.game = game
@@ -20,10 +16,10 @@ class Decider:
 
 class RandomDecider(Decider):
     choices = [
-        Decider.UP,
-        Decider.DOWN,
-        Decider.LEFT,
-        Decider.RIGHT,
+        path.UP,
+        path.DOWN,
+        path.LEFT,
+        path.RIGHT,
     ]
 
     def decide(self):
@@ -43,10 +39,32 @@ class WeightedDecider(Decider):
         else:
             raise Exception("Unknown board token")
 
+    def _targets(self):
+        """ Retrieve a list of all targets as (x,y) """
+        return self.game.food
+
     def decide(self):
-        grid = path.weights(
+        matrix = path.matrix(
             height=self.game.height,
             width=self.game.width,
-            initial=self.game.me.head,
+            initial=self.game.head,
             cost_fn=self._cost,
         )
+        targets = self._targets()
+
+        target = None
+        target_cost = math.inf
+        for t in targets:
+            cost = path.cost(matrix, self.game.head, t)
+            print('cost', self.game.head, t, cost)
+            if cost < target_cost:
+                target_cost = cost
+                target = t
+
+        if target_cost == math.inf:
+            print('matrix', matrix)
+            return RandomDecider(self.game).decide()
+
+        route = path.walk(matrix, self.game.head, target)
+        print('route', self.game.head, route[1], target_cost)
+        return path.direction(self.game.head, route[1])

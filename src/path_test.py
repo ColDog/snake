@@ -7,9 +7,24 @@ def test_matrix():
     print('')
     for row in grid:
         print(row)
-    route, cost = path.walk(
-        grid, (0, 0), (5, 5),
-    )
-    print('')
-    print(cost)
-    print(route)
+
+
+def test_cost():
+    matrix = path.matrix(10, 10, (0, 0))
+    assert path.cost(matrix, (0, 0), (0, 1)) == 1
+
+
+def test_shortest_path():
+    matrix = path.matrix(10, 10, (0, 0))
+    assert path.walk(matrix, (0, 0), (0, 1)) == [(0, 0), (0, 1)]
+
+
+def test_direction():
+    d = path.direction((0, 0), (0, 1))
+    assert d == "up"
+    d = path.direction((0, 1), (0, 0))
+    assert d == "down"
+    d = path.direction((0, 0), (1, 0))
+    assert d == "right"
+    d = path.direction((1, 0), (0, 0))
+    assert d == "left"
