@@ -70,6 +70,10 @@ def cost(grid, initial, target):
     """
     Cost provides the cost from initial to target.
     """
+    if target[1] >= len(grid):
+        return math.inf
+    if target[0] >= len(grid[target[1]]):
+        return math.inf
     _, cost = grid[target[1]][target[0]]
     return cost
 
