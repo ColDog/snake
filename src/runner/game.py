@@ -5,6 +5,31 @@ import path
 
 
 class MoveError(Exception):
+    def __init__(self, state, move):
+        self.state = state
+        self.move = move
+
+    def __str__(self):
+        return '{}: {} to {} -- state={}'.format(
+            self.__class__.__name__, self.state['id'],
+            self.move,
+            self.state,
+        )
+
+
+class HitSelfError(MoveError):
+    pass
+
+
+class HitSnakeError(MoveError):
+    pass
+
+
+class OffBoardError(MoveError):
+    pass
+
+
+class InvalidMoveError(MoveError):
     pass
 
 
@@ -45,7 +70,8 @@ class Game:
         }
 
     def _move(self, snake):
-        move = snake.move(**self._game_state(snake))
+        state = self._game_state(snake)
+        move = snake.move(**state)
 
         head = snake.coords[0]
         if move == path.MOVES.UP:
@@ -57,26 +83,21 @@ class Game:
         elif move == path.MOVES.DOWN:
             head = (head[0], head[1] - 1)
         else:
-            raise MoveError('Invalid move: {}'.format(move))
+            raise InvalidMoveError(state, move)
 
-        if head[0] >= self.width:
-            raise MoveError('Off board: {}'.format(head))
-        if head[0] < 0:
-            raise MoveError('Off board: {}'.format(head))
-        if head[1] >= self.height:
-            raise MoveError('Off board: {}'.format(head))
-        if head[1] < 0:
-            raise MoveError('Off board: {}'.format(head))
+        if (head[0] >= self.width or
+           head[0] < 0 or
+           head[1] >= self.height or
+           head[1] < 0):
+            raise OffBoardError(state, move)
 
         for other_snake in self.snakes:
             for coord in other_snake.coords:
                 if coord == head:
                     if other_snake.id == snake.id:
-                        raise MoveError('Hit self at {}'.format(head))
+                        raise HitSelfError(state, move)
                     else:
-                        raise MoveError(
-                            'Hit snake {} at {}'.format(other_snake.id, head)
-                        )
+                        raise HitSnakeError(state, move)
 
         grow = False
         for idx, food in enumerate(self.food):
@@ -84,6 +105,9 @@ class Game:
                 grow = True
                 self.food.pop(idx)
                 break
+
+        if grow:
+            self._initialize_food()
 
         if not grow:
             snake.coords.pop(-1)
@@ -98,17 +122,17 @@ class Game:
                 snake.id = str(idx + 1)
             if len(snake.coords) > 0:
                 continue
-            x = random.randint(0, self.width-1)
-            y = random.randint(0, self.height-1)
+            x = random.randint(0, self.width-4)
+            y = random.randint(0, self.height-4)
             snake.coords = [(x, y), (x, y + 1)]
 
     def _initialize_food(self):
         if self.food is None or len(self.food) > 0:
             return
-        self.food = [(
-            random.randint(0, self.width-1),
-            random.randint(0, self.height-1)
-        )]
+        self.food = [
+            (random.randint(0, self.width-1), random.randint(0, self.height-1)),
+            (random.randint(0, self.width-1), random.randint(0, self.height-1))
+        ]
 
     def run(self, turns=math.inf):
         while self.turns < turns:

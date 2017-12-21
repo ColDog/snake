@@ -17,4 +17,4 @@ desc = runner.Game(
 for state in desc.run():
     print(state)
     grid.pretty_print(grid.draw(**state))
-    time.sleep(1)
+    time.sleep(0.2)

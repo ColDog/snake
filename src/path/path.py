@@ -57,6 +57,8 @@ def walk(grid, initial, target):
     stack = [target, prev]
 
     while prev != initial:
+        if prev is None:
+            return None
         prev = grid[prev[1]][prev[0]][0]
         stack.append(prev)
     stack.reverse()
