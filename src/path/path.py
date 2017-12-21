@@ -17,38 +17,35 @@ def matrix(height, width, initial, cost_fn=None):
     if cost_fn is None:
         cost_fn = default_cost_fn
 
+    # Grid is a 2d array with (prev, cost). It is indexed as grid[y][x] to be
+    # more like a traditional graph.
     grid = [[(None, math.inf)] * width for _ in range(height)]
     grid[initial[1]][initial[0]] = (None, 0)
 
-    visited = set()
+    # Unvisited is the tracking set of unvisited elements in the graph.
+    unvisited = set([v for v in _each_vertex(width, height)])
 
-    cur = initial
-    visited.add(cur)
+    # Set the initial cost to 0.
+    grid[initial[1]][initial[0]] = (None, 0)
 
-    while True:
-        nxt = None
-        nxt_cost = math.inf
+    while len(unvisited) > 0:
+        # Select the minimum value from the unvisited set.
+        cur = next(iter(unvisited))
         cur_cost = grid[cur[1]][cur[0]][1]
+        for x, y in unvisited:
+            if grid[y][x][1] < cur_cost:
+                cur = (x, y)
+                cur_cost = grid[y][x][1]
+        unvisited.remove(cur)
 
+        # For all neighbours in the graph from the current vertex.
         for n in _neighbours(cur, height, width):
-            if n in visited:
-                continue
-            cost = grid[n[1]][n[0]][1]
-            est_cost = cur_cost + cost_fn(cur, n)
-            if cost > est_cost:
-                cost = est_cost
-                grid[n[1]][n[0]] = (cur, cost)
-            if cost < nxt_cost:
-                nxt = n
-                nxt_cost = cost
-
-        if nxt_cost == math.inf:
-            return grid
-        if nxt in visited:
-            return grid
-
-        cur = nxt
-        visited.add(cur)
+            # Calculate an alternate cost and compare this to the current cost
+            # of this neighbour.
+            alt = cur_cost + cost_fn(cur, n)
+            if alt < grid[n[1]][n[0]][1]:
+                grid[n[1]][n[0]] = (cur, alt)
+    return grid
 
 
 def walk(grid, initial, target):
@@ -101,3 +98,30 @@ def _neighbours(current, height, width):
         neighbours.append((x-1, y))
 
     return neighbours
+
+
+def _each_vertex(width, height):
+    for x in range(width):
+        for y in range(height):
+            yield (x, y)
+
+
+def pretty_print(grid, cur=None):
+    rev = list(grid)
+    rev.reverse()
+    print('')
+    for row in rev:
+        for col in row:
+            tok = str(col[1])
+            if tok == 'inf':
+                tok = '∞'
+            tok = _pad(tok, 2)
+
+            print('|' + tok, end='')
+        print('|')
+
+
+def _pad(s, n):
+    if len(s) < n:
+        s += ' ' * (n - len(s))
+    return s

@@ -17,7 +17,6 @@ def _ideal_path(id=None, snakes=None, food=None, height=None, width=None):
     head = snakes[id][0]
     matrix = _weights(id, snakes, food, height, width)
     targets = food
-    _pretty_print(matrix)
 
     target = None
     target_cost = math.inf
@@ -70,22 +69,3 @@ def _cost(g):
         else:
             raise Exception("Unknown board token")
     return cost_fn
-
-
-def _pretty_print(grid):
-    rev = list(grid)
-    rev.reverse()
-    for row in rev:
-        for col in row:
-            tok = str(col[1])
-            if tok == 'inf':
-                tok = '∞'
-            tok = _pad(tok, 2)
-            print('|' + tok, end='')
-        print('|')
-
-
-def _pad(s, n):
-    if len(s) < n:
-        s += ' ' * (n - len(s))
-    return s
