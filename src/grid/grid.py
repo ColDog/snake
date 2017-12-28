@@ -1,8 +1,8 @@
 
 class TYPES:
-    SNAKE = 'snake'
-    FOOD = 'food'
-    EMPTY = 'empty'
+    EMPTY = 0
+    FOOD = 1
+    SNAKE = 2
 
 
 class BoardToken:

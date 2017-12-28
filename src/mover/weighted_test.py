@@ -1,5 +1,5 @@
 import grid
-from .weighted import weighted_mover, _weights, _ideal_path, _pretty_print
+from .weighted import weighted_mover, _weights, _ideal_path
 
 
 def test_weighted_mover():
@@ -13,7 +13,6 @@ def test_weighted_mover():
         height=10,
         width=10,
     )
-    _pretty_print(_weights(**state))
     grid.pretty_print(grid.draw(**state))
     # Direction up because that's where the nearest food is.
     assert weighted_mover(**state) == 'up'
@@ -31,8 +30,6 @@ def test_weighted_move_around_snake():
         height=10,
         width=10,
     )
-    _pretty_print(_weights(**state))
     grid.pretty_print(grid.draw(**state))
-    # Direction up because that's where the nearest food is.
     assert weighted_mover(**state) == 'right'
-    assert _ideal_path(**state) == [(0, 2), (1, 2)]
+    assert _ideal_path(**state)[:2] == [(0, 2), (1, 2)]

@@ -99,10 +99,9 @@ def test_eat_food():
     run = iter(g.run())
     state = next(run)
     assert state == {'id': '1', 'snakes': {'1': [(0, 1)]}, 'food': [(0, 2)],
-                     'width': 10, 'height': 10}
+                     'width': 10, 'height': 10, 'grow': False}
     state = next(run)
-    assert state == {'id': '1', 'snakes': {'1': [(0, 2), (0, 1)]}, 'food': [],
-                     'width': 10, 'height': 10}
+    assert state['snakes']['1'] == [(0, 2), (0, 1)]
 
 
 def test_hit_snake():
