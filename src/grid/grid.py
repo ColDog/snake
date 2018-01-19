@@ -16,7 +16,7 @@ class BoardToken:
         return "{}({})".format(self.type, self.id or '')
 
 
-def draw(id=None, snakes=None, food=None, width=None, height=None):
+def draw(id=None, snakes=None, food=None, width=None, height=None, **kwargs):
     """
     Takes a game state input and returns a board with the tokens at each
     position.
