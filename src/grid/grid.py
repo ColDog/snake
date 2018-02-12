@@ -1,19 +1,20 @@
 
 class TYPES:
-    EMPTY = 0
-    FOOD = 1
-    SNAKE = 2
+    EMPTY = 'Empty'
+    FOOD = 'Food'
+    SNAKE = 'Snake'
 
 
 class BoardToken:
 
-    def __init__(self, token_type, token_id=None, token_head=False):
+    def __init__(self, token_type, token_id=None, token_head=False, token_tail=False):
         self.type = token_type
         self.id = token_id
         self.head = token_head
+        self.tail = token_tail
 
-    def data(self):
-        return "{}({})".format(self.type, self.id or '')
+    def __str__(self):
+        return f'{self.type}({self.id})'
 
 
 def draw(id=None, snakes=None, food=None, width=None, height=None, **kwargs):
@@ -31,11 +32,14 @@ def draw(id=None, snakes=None, food=None, width=None, height=None, **kwargs):
         grid[y][x] = BoardToken(TYPES.FOOD)
 
     for id, coords in snakes.items():
-        head = True
-        for coord in coords:
+        for idx, coord in enumerate(coords):
+            head = idx == 0
+            tail = idx == len(coords) - 1
             x, y = coord
-            grid[y][x] = BoardToken(TYPES.SNAKE, id, head)
-            head = False
+            try:
+                grid[y][x] = BoardToken(TYPES.SNAKE, id, head, tail)
+            except IndexError:
+                pass
 
     return grid
 

@@ -135,8 +135,10 @@ class Game:
         if self.food is None or len(self.food) > 0:
             return
         self.food = [
-            (random.randint(0, self.width-1), random.randint(0, self.height-1)),
-            (random.randint(0, self.width-1), random.randint(0, self.height-1))
+            (random.randint(0, self.width-1),
+             random.randint(0, self.height-1)),
+            (random.randint(0, self.width-1),
+             random.randint(0, self.height-1)),
         ]
 
     def run(self, turns=math.inf):

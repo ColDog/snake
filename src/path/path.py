@@ -39,7 +39,7 @@ def matrix(height, width, initial, cost_fn=None):
         unvisited.remove(cur)
 
         # For all neighbours in the graph from the current vertex.
-        for n in _neighbours(cur, height, width):
+        for n in neighbours(cur, height, width):
             # Calculate an alternate cost and compare this to the current cost
             # of this neighbour.
             alt = cur_cost + cost_fn(cur, n)
@@ -86,7 +86,23 @@ def direction(initial, target):
         return MOVES.LEFT if x1 > x2 else MOVES.RIGHT
 
 
-def _neighbours(current, height, width):
+def size(g):
+    """ Returns (width, height) """
+    return (len(g), len(g[0]))
+
+
+def at_edge(g, target):
+    w, h = size(g)
+    x, y = target
+    if x == w - 1 or x == 0:
+        return True
+    elif y == h - 1 or y == 0:
+        return True
+    else:
+        return False
+
+
+def neighbours(current, height, width):
     x, y = current
 
     neighbours = []
@@ -108,16 +124,19 @@ def _each_vertex(width, height):
             yield (x, y)
 
 
-def pretty_print(grid, cur=None):
+def pretty_print(grid, current=None):
     rev = list(grid)
     rev.reverse()
     print('')
-    for row in rev:
-        for col in row:
+    for yidx, row in enumerate(rev):
+        for x, col in enumerate(row):
             tok = str(col[1])
             if tok == 'inf':
                 tok = '∞'
-            tok = _pad(tok, 2)
+            tok = _pad(tok, 3)
+            y = len(rev) - yidx - 1
+            if current and y == current[1] and x == current[0]:
+                tok = "\033[96m {} \033[0m".format('x')
 
             print('|' + tok, end='')
         print('|')
