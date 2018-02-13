@@ -7,7 +7,8 @@ class TYPES:
 
 class BoardToken:
 
-    def __init__(self, token_type, token_id=None, token_head=False, token_tail=False):
+    def __init__(self, token_type, token_id=None, token_head=False,
+                 token_tail=False):
         self.type = token_type
         self.id = token_id
         self.head = token_head
@@ -44,8 +45,8 @@ def draw(id=None, snakes=None, food=None, width=None, height=None, **kwargs):
     return grid
 
 
-def pretty_print(grid):
-    rev = list(grid)
+def pretty_print(board):
+    rev = list(board)
     rev.reverse()
     for row in rev:
         for col in row:

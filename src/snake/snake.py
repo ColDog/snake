@@ -1,11 +1,10 @@
 import math
-import random
 import path
-import grid
+import board
 
 
-def weighted_mover(id=None, snakes=None, food=None, height=None, width=None,
-                   health=None):
+def move(id=None, snakes=None, food=None, height=None, width=None,
+         health=None):
     route = _ideal_path(id, snakes, food, height, width, health)
     head = snakes[id][0]
     if route is None or route[1] is None:
@@ -70,16 +69,17 @@ def _ideal_path(id=None, snakes=None, food=None, height=None, width=None,
 
 def _safe_local(id=None, snakes=None, food=None, height=None, width=None):
     head = snakes[id][0]
-    g = grid.draw(id=id, snakes=snakes, food=food, height=height, width=width)
+    g = board.draw(id=id, snakes=snakes, food=food, height=height, width=width)
     w, h = path.size(g)
     for (x, y) in path.neighbours(head, h, w):
-        if g[y][x].type == grid.TYPES.EMPTY or g[y][x].type == grid.TYPES.FOOD:
+        if (g[y][x].type == board.TYPES.EMPTY or
+           g[y][x].type == board.TYPES.FOOD):
             return [head, (x, y)]
     return None
 
 
 def _weights(id=None, snakes=None, food=None, height=None, width=None):
-    g = grid.draw(id=id, snakes=snakes, food=food, height=height, width=width)
+    g = board.draw(id=id, snakes=snakes, food=food, height=height, width=width)
     head = snakes[id][0]
 
     matrix = path.matrix(
@@ -97,21 +97,21 @@ def _cost(g, self_id):
 
     def cost_fn(current, candidate):
         x, y = candidate
-        if g[y][x].type == grid.TYPES.SNAKE and not g[y][x].tail:
+        if g[y][x].type == board.TYPES.SNAKE and not g[y][x].tail:
             return math.inf
         cost = 1
         if path.at_edge(g, (x, y)):
             cost += 100
         for (nx, ny) in path.neighbours(candidate, h, w):
             n = g[ny][nx]
-            if n.id != self_id and n.type == grid.TYPES.SNAKE:
+            if n.id != self_id and n.type == board.TYPES.SNAKE:
                 cost += 300
         return cost
     return cost_fn
 
 
-def _possibilities(g):
-    w, h = path.size(g)
+def _possibilities(b):
+    w, h = path.size(b)
 
     def update_fn(target, cost):
         x, y = target
@@ -119,12 +119,11 @@ def _possibilities(g):
             return cost
         impossible_neighbours = 0
         for (nx, ny) in path.neighbours_with_off_board((x, y), h, w):
-            if (path.off_board(g, (nx, ny)) or
-               g[ny][nx].type == grid.TYPES.SNAKE):
+            if (path.off_board(b, (nx, ny)) or
+               b[ny][nx].type == board.TYPES.SNAKE):
 
                 impossible_neighbours += 1
         if impossible_neighbours >= 3:
-            print('impossible', (x, y))
             return math.inf
         return cost
     return update_fn

@@ -1,6 +1,6 @@
 import flask
 import json
-import mover
+import snake
 
 app = flask.Flask(__name__)
 
@@ -30,7 +30,7 @@ def move():
         },
         health=state['you']['health'],
     )
-    direction = mover.weighted_mover(**game_state)
+    direction = snake.move(**game_state)
     return json.dumps({'move': direction})
 
 
