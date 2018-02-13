@@ -12,6 +12,7 @@ def test_weighted_mover():
         food=[(0, 3)],
         height=10,
         width=10,
+        health=10,
     )
     grid.pretty_print(grid.draw(**state))
     # Direction up because that's where the nearest food is.
@@ -29,7 +30,8 @@ def test_weighted_move_around_snake():
         food=[(0, 9)],
         height=10,
         width=10,
+        health=10,
     )
     grid.pretty_print(grid.draw(**state))
-    assert weighted_mover(**state) == 'right'
-    assert _ideal_path(**state)[:2] == [(0, 2), (1, 2)]
+    assert weighted_mover(**state) == 'down'
+    assert _ideal_path(**state)[:2] == [(0, 2), (0, 1)]

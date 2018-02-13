@@ -34,7 +34,7 @@ def draw(id=None, snakes=None, food=None, width=None, height=None, **kwargs):
     for id, coords in snakes.items():
         for idx, coord in enumerate(coords):
             head = idx == 0
-            tail = idx == len(coords) - 1
+            tail = idx == len(coords) - 1 and coord != coords[idx-1]
             x, y = coord
             try:
                 grid[y][x] = BoardToken(TYPES.SNAKE, id, head, tail)

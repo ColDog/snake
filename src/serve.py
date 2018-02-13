@@ -27,14 +27,17 @@ def move():
                 convert(f['x'], f['y']) for f in s['body']['data']
             ]
             for s in state['snakes']['data']
-        }
+        },
+        health=state['you']['health'],
     )
     direction = mover.weighted_mover(**game_state)
     return json.dumps({'move': direction})
 
 
-def game(id=None, snakes=None, food=None, height=None, width=None):
-    return dict(id=id, snakes=snakes, food=food, height=height, width=width)
+def game(id=None, snakes=None, food=None, height=None, width=None,
+         health=None):
+    return dict(id=id, snakes=snakes, food=food, height=height, width=width,
+                health=health)
 
 
 def converter(w, h):
@@ -44,4 +47,4 @@ def converter(w, h):
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=8090, debug=False)
+    app.run(host='0.0.0.0', port=8090, debug=True)

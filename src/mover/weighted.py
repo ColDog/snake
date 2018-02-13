@@ -4,63 +4,77 @@ import path
 import grid
 
 
-def weighted_mover(id=None, snakes=None, food=None, height=None, width=None):
-    route = _ideal_path(id, snakes, food, height, width)
+def weighted_mover(id=None, snakes=None, food=None, height=None, width=None,
+                   health=None):
+    route = _ideal_path(id, snakes, food, height, width, health)
     head = snakes[id][0]
-    if route is None:
-        return 'left'
+    if route is None or route[1] is None:
+        print('->', 'FAILED')
+        return path.MOVES.UP
     move = path.direction(head, route[1])
     print('->', move)
     return move
 
 
-def _ideal_path(id=None, snakes=None, food=None, height=None, width=None):
+def _ideal_path(id=None, snakes=None, food=None, height=None, width=None,
+                health=None):
     head = snakes[id][0]
     tail = snakes[id][-1]
     matrix = _weights(id, snakes, food, height, width)
-    targets = food  # + [tail]
 
     path.pretty_print(matrix, current=head)
 
+    target_tiers = []
+
+    smallest = _smallest_snake(id, snakes, smaller_than=len(snakes[id]))
+
+    # If needs to eat.
+    if health < min((width, height)) * 2 or smallest is None:
+        target_tiers.append(('food', food))
+
+    # Found a snake we could eat.
+    if smallest is not None:
+        s = snakes[smallest]
+        next_head = path.moved_position(s[0], path.direction(s[0], s[1]))
+        target_tiers.append(('attack', [next_head]))
+
+    # Add the tail to the tier always.
+    target_tiers.append(('tail', [tail]))
+    target_tiers.append(('corners', path.corners(height, width)))
+
     target = None
     target_cost = math.inf
-    for t in targets:
-        cost = path.cost(matrix, head, t)
-        print('cost', t, cost)
-        if cost < target_cost:
-            target_cost = cost
-            target = t
+    for name, tier in target_tiers:
+        for t in tier:
+            cost = path.cost(matrix, head, t)
+            if cost < target_cost:
+                target_cost = cost
+                target = t
+        if target_cost != math.inf and target_cost != 0:
+            print('tier success', name, target_cost)
+            break
+        print('tier failed', name, target_cost)
 
     if target_cost == math.inf:
-        return _lowest_local(matrix, head)
-
-    if target_cost == math.inf:
-        return _safe_local(matrix, head)
-
+        print('safe local')
+        return _safe_local(
+            id=id,
+            snakes=snakes,
+            food=food,
+            height=height,
+            width=width,
+        )
     route = path.walk(matrix, head, target)
     return route
 
 
-def _lowest_local(matrix, head):
-    width, height = path.size(matrix)
-    target = None
-    target_cost = math.inf
-    for (nx, ny) in path.neighbours(head, height, width):
-        cost = path.cost(matrix, head, (nx, ny))
-        if cost < target_cost:
-            target_cost = cost
-            target = (nx, ny)
-    return [head, target]
-
-
-def _safe_local(matrix, head):
-    x, y = head
-    targets = [(x, y+1), (x+1, y), (x, y-1), (x-1, y)]
-    random.shuffle(targets)
-
-    for target in targets:
-        if path.cost(matrix, head, target) <= 1:
-            return [head, target]
+def _safe_local(id=None, snakes=None, food=None, height=None, width=None):
+    head = snakes[id][0]
+    g = grid.draw(id=id, snakes=snakes, food=food, height=height, width=width)
+    w, h = path.size(g)
+    for (x, y) in path.neighbours(head, h, w):
+        if g[y][x].type == grid.TYPES.EMPTY or g[y][x].type == grid.TYPES.FOOD:
+            return [head, (x, y)]
     return None
 
 
@@ -73,6 +87,7 @@ def _weights(id=None, snakes=None, food=None, height=None, width=None):
         width=width,
         initial=head,
         cost_fn=_cost(g, id),
+        poss_fn=_possibilities(g),
     )
     return matrix
 
@@ -82,29 +97,45 @@ def _cost(g, self_id):
 
     def cost_fn(current, candidate):
         x, y = candidate
-        if g[y][x].type == grid.TYPES.EMPTY or g[y][x].tail:
-            cost = 2
-            if path.at_edge(g, (x, y)):
-                cost += 10
-            for (nx, ny) in path.neighbours(candidate, h, w):
-                n = g[ny][nx]
-                if n.id != self_id and n.type == grid.TYPES.SNAKE:
-                    return math.inf
-                for (n2x, n2y) in path.neighbours((nx, ny), h, w):
-                    n = g[n2y][n2x]
-                    if n.id != self_id and n.type == grid.TYPES.SNAKE:
-                        cost += 20
-                    for (n3x, n3y) in path.neighbours((n2x, n2y), h, w):
-                        n = g[n3y][n3x]
-                        if n.id != self_id and n.type == grid.TYPES.SNAKE:
-                            cost += 10
-            return cost
-        elif g[y][x].type == grid.TYPES.SNAKE:
+        if g[y][x].type == grid.TYPES.SNAKE and not g[y][x].tail:
             return math.inf
-        elif g[y][x].type == grid.TYPES.FOOD:
-            if y == h-1 or x == w-1:
-                return 2
-            return 1
-        else:
-            raise Exception("Unknown board token")
+        cost = 1
+        if path.at_edge(g, (x, y)):
+            cost += 100
+        for (nx, ny) in path.neighbours(candidate, h, w):
+            n = g[ny][nx]
+            if n.id != self_id and n.type == grid.TYPES.SNAKE:
+                cost += 300
+        return cost
     return cost_fn
+
+
+def _possibilities(g):
+    w, h = path.size(g)
+
+    def update_fn(target, cost):
+        x, y = target
+        if cost == math.inf:
+            return cost
+        impossible_neighbours = 0
+        for (nx, ny) in path.neighbours_with_off_board((x, y), h, w):
+            if (path.off_board(g, (nx, ny)) or
+               g[ny][nx].type == grid.TYPES.SNAKE):
+
+                impossible_neighbours += 1
+        if impossible_neighbours >= 3:
+            print('impossible', (x, y))
+            return math.inf
+        return cost
+    return update_fn
+
+
+def _smallest_snake(self_id, snakes, smaller_than=math.inf):
+    smallest = None
+    smallest_size = math.inf
+    for (sid, snake) in snakes.items():
+        if sid != self_id and len(snake) < smallest_size and \
+           (len(snake) < smaller_than):
+            smallest_size = len(snake)
+            smallest = sid
+    return smallest

@@ -7,6 +7,7 @@ from .path import (
     cost,
     walk,
     direction,
+    moved_position,
 )
 
 
@@ -35,6 +36,17 @@ def test_direction():
     assert d == "right"
     d = direction((1, 0), (0, 0))
     assert d == "left"
+
+
+def test_moved_position():
+    p = moved_position((0, 0), 'up')
+    assert p == (0, 1)
+    p = moved_position((0, 1), 'down')
+    assert p == (0, 0)
+    p = moved_position((0, 0), 'right')
+    assert p == (1, 0)
+    p = moved_position((1, 0), 'left')
+    assert p == (0, 0)
 
 
 def test_matrix_cost():

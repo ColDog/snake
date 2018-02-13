@@ -3,12 +3,12 @@ import math
 from .moves import MOVES
 
 
-def default_cost_fn(*args):
+def default_cost_fn(current, candidate):
     """ Default cost fn is the default useful for a graph. """
     return 1
 
 
-def matrix(height, width, initial, cost_fn=None):
+def matrix(height, width, initial, cost_fn=None, poss_fn=None):
     """
     Matrix builds up a matrix from the initial node showing the cost to reach
     every node in the graph in an optimial path. This can be inspected by using
@@ -45,7 +45,27 @@ def matrix(height, width, initial, cost_fn=None):
             alt = cur_cost + cost_fn(cur, n)
             if alt < grid[n[1]][n[0]][1]:
                 grid[n[1]][n[0]] = (cur, alt)
+    if poss_fn:
+        _paint_possibilites(grid, poss_fn)
     return grid
+
+
+def _paint_possibilites(grid, poss_func):
+    print('painting')
+    while True:
+        changed = False
+        w, h = size(grid)
+        for y in range(h):
+            for x in range(w):
+                prev, cost = grid[y][x]
+                if cost == math.inf:
+                    continue
+                new_cost = poss_func((x, y), cost)
+                if new_cost != cost:
+                    grid[y][x] = (prev, new_cost)
+                    changed = True
+        if not changed:
+            return
 
 
 def walk(grid, initial, target):
@@ -86,6 +106,24 @@ def direction(initial, target):
         return MOVES.LEFT if x1 > x2 else MOVES.RIGHT
 
 
+def moved_position(inital, direction):
+    x, y = inital
+    if direction == MOVES.UP:
+        return (x, y+1)
+    elif direction == MOVES.DOWN:
+        return (x, y-1)
+    elif direction == MOVES.LEFT:
+        return (x-1, y)
+    elif direction == MOVES.RIGHT:
+        return (x+1, y)
+    else:
+        raise Exception("unkown direction")
+
+
+def corners(height, width):
+    return [(0, 0), (0, height-1), (width-1, 0), (width-1, height-1)]
+
+
 def size(g):
     """ Returns (width, height) """
     return (len(g), len(g[0]))
@@ -100,6 +138,12 @@ def at_edge(g, target):
         return True
     else:
         return False
+
+
+def off_board(g, target):
+    w, h = size(g)
+    x, y = target
+    return x >= w or y >= h or y < 0 or x < 0
 
 
 def neighbours(current, height, width):
@@ -118,6 +162,16 @@ def neighbours(current, height, width):
     return neighbours
 
 
+def neighbours_with_off_board(current, height, width):
+    x, y = current
+    return [
+        (x, y+1),
+        (x, y-1),
+        (x+1, y),
+        (x-1, y),
+    ]
+
+
 def _each_vertex(width, height):
     for x in range(width):
         for y in range(height):
@@ -133,10 +187,10 @@ def pretty_print(grid, current=None):
             tok = str(col[1])
             if tok == 'inf':
                 tok = '∞'
-            tok = _pad(tok, 3)
+            tok = _pad(tok, 4)
             y = len(rev) - yidx - 1
             if current and y == current[1] and x == current[0]:
-                tok = "\033[96m {} \033[0m".format('x')
+                tok = "\033[96m {}  \033[0m".format('x')
 
             print('|' + tok, end='')
         print('|')
