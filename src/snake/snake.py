@@ -3,6 +3,9 @@ import path
 import board
 
 
+AGGRESSIVE = True
+
+
 def move(id=None, snakes=None, food=None, height=None, width=None,
          health=None):
     route = _ideal_path(id, snakes, food, height, width, health)
@@ -21,7 +24,7 @@ def _ideal_path(id=None, snakes=None, food=None, height=None, width=None,
     tail = snakes[id][-1]
     matrix = _weights(id, snakes, food, height, width)
 
-    path.pretty_print(matrix, current=head)
+    # path.pretty_print(matrix, current=head)
 
     target_tiers = []
 
@@ -32,9 +35,11 @@ def _ideal_path(id=None, snakes=None, food=None, height=None, width=None,
         target_tiers.append(('food', food))
 
     # Found a snake we could eat.
-    if smallest is not None:
+    if smallest is not None and AGGRESSIVE:
         s = snakes[smallest]
-        next_head = path.moved_position(s[0], path.direction(s[0], s[1]))
+        next_head = path.moved_position(s[0], path.direction(s[1], s[0]))
+        if next_head == head:
+            next_head = s[0]
         target_tiers.append(('attack', [next_head]))
 
     # Add the tail to the tier always.
@@ -49,10 +54,10 @@ def _ideal_path(id=None, snakes=None, food=None, height=None, width=None,
             if cost < target_cost:
                 target_cost = cost
                 target = t
-        if target_cost != math.inf and target_cost != 0:
+        if target_cost != math.inf:
             print('tier success', name, target_cost)
             break
-        print('tier failed', name, target_cost)
+        print('tier failed', name, target_cost, tier)
 
     if target_cost == math.inf:
         print('safe local')
