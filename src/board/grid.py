@@ -8,11 +8,12 @@ class TYPES:
 class BoardToken:
 
     def __init__(self, token_type, token_id=None, token_head=False,
-                 token_tail=False):
+                 token_tail=False, token_size=None):
         self.type = token_type
         self.id = token_id
         self.head = token_head
         self.tail = token_tail
+        self.size = token_size
 
     def __str__(self):
         return f'{self.type}({self.id})'
@@ -36,9 +37,10 @@ def draw(id=None, snakes=None, food=None, width=None, height=None, **kwargs):
         for idx, coord in enumerate(coords):
             head = idx == 0
             tail = idx == len(coords) - 1 and coord != coords[idx-1]
+            size = len(coords)
             x, y = coord
             try:
-                grid[y][x] = BoardToken(TYPES.SNAKE, id, head, tail)
+                grid[y][x] = BoardToken(TYPES.SNAKE, id, head, tail, size)
             except IndexError:
                 pass
 

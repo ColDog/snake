@@ -60,7 +60,7 @@ def _paint_possibilites(grid, poss_func):
                 prev, cost = grid[y][x]
                 if cost == math.inf:
                     continue
-                new_cost = poss_func((x, y), cost)
+                new_cost = poss_func((x, y), cost, grid)
                 if new_cost != cost:
                     grid[y][x] = (prev, new_cost)
                     changed = True

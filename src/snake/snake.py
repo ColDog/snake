@@ -21,16 +21,15 @@ def _ideal_path(id=None, snakes=None, food=None, height=None, width=None,
     tail = snakes[id][-1]
     matrix = _weights(id, snakes, food, height, width)
 
-    # path.pretty_print(matrix, current=head)
+    path.pretty_print(matrix, current=head)
 
     target_tiers = []
 
     # Retrieves smallest non friendly snake.
-    smallest = _smallest_snake(id, snakes, smaller_than=len(snakes[id]),
-                               friendlies=friendlies)
+    smallest, smallest_size = _smallest_snake(id, snakes, friendlies)
 
     # If needs to eat.
-    if health < min((width, height)) * 2 or smallest is None:
+    if health < min((width, height)) * 2 or len(snakes[id]) < smallest_size:
         target_tiers.append(('food', food))
 
     # Found a snake we could eat.
@@ -90,13 +89,13 @@ def _weights(id=None, snakes=None, food=None, height=None, width=None):
         height=height,
         width=width,
         initial=head,
-        cost_fn=_cost(g, id),
-        poss_fn=_possibilities(g),
+        cost_fn=_cost(g, id, len(snakes[id])),
+        poss_fn=_possibilities(g, id),
     )
     return matrix
 
 
-def _cost(g, self_id):
+def _cost(g, self_id, self_size):
     w, h = path.size(g)
 
     def cost_fn(current, candidate):
@@ -105,41 +104,44 @@ def _cost(g, self_id):
             return math.inf
         cost = 1
         if path.at_edge(g, (x, y)):
-            cost += 100
+            cost += 200
+        parent = g[y][x]
         for (nx, ny) in path.neighbours(candidate, h, w):
             n = g[ny][nx]
             if n.id != self_id and n.type == board.TYPES.SNAKE:
-                cost += 300
+                cost += 100
+            if parent.type == board.TYPES.FOOD and n.type == board.TYPES.SNAKE and n.size > self_size:
+                return math.inf
         return cost
     return cost_fn
 
 
-def _possibilities(b):
+def _possibilities(b, self_id):
     w, h = path.size(b)
 
-    def update_fn(target, cost):
+    def update_fn(target, cost, matrix):
         x, y = target
         if cost == math.inf:
             return cost
         impossible_neighbours = 0
         for (nx, ny) in path.neighbours_with_off_board((x, y), h, w):
-            if (path.off_board(b, (nx, ny)) or
-               b[ny][nx].type == board.TYPES.SNAKE):
-
+            if (path.off_board(b, (nx, ny)) or (
+                   b[ny][nx].type == board.TYPES.SNAKE and not
+                   (b[ny][nx].head and b[ny][nx].id == self_id)
+               ) or matrix[ny][nx][1] == math.inf):
                 impossible_neighbours += 1
         if impossible_neighbours >= 3:
-            return math.inf
+            return 2000
         return cost
     return update_fn
 
 
-def _smallest_snake(self_id, snakes, smaller_than=math.inf, friendlies=None):
+def _smallest_snake(self_id, snakes, friendlies=None):
     smallest = None
     smallest_size = math.inf
     for (sid, snake) in snakes.items():
         if (sid != self_id and not friendlies[sid]
-           and len(snake) < smallest_size and
-           len(snake) < smaller_than):
+           and len(snake) < smallest_size):
             smallest_size = len(snake)
             smallest = sid
-    return smallest
+    return smallest, smallest_size
