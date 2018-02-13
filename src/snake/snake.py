@@ -3,12 +3,9 @@ import path
 import board
 
 
-AGGRESSIVE = True
-
-
 def move(id=None, snakes=None, food=None, height=None, width=None,
-         health=None):
-    route = _ideal_path(id, snakes, food, height, width, health)
+         health=None, friendlies=None):
+    route = _ideal_path(id, snakes, food, height, width, health, friendlies)
     head = snakes[id][0]
     if route is None or route[1] is None:
         print('->', 'FAILED')
@@ -19,7 +16,7 @@ def move(id=None, snakes=None, food=None, height=None, width=None,
 
 
 def _ideal_path(id=None, snakes=None, food=None, height=None, width=None,
-                health=None):
+                health=None, friendlies=None):
     head = snakes[id][0]
     tail = snakes[id][-1]
     matrix = _weights(id, snakes, food, height, width)
@@ -28,14 +25,16 @@ def _ideal_path(id=None, snakes=None, food=None, height=None, width=None,
 
     target_tiers = []
 
-    smallest = _smallest_snake(id, snakes, smaller_than=len(snakes[id]))
+    # Retrieves smallest non friendly snake.
+    smallest = _smallest_snake(id, snakes, smaller_than=len(snakes[id]),
+                               friendlies=friendlies)
 
     # If needs to eat.
     if health < min((width, height)) * 2 or smallest is None:
         target_tiers.append(('food', food))
 
     # Found a snake we could eat.
-    if smallest is not None and AGGRESSIVE:
+    if smallest is not None:
         s = snakes[smallest]
         next_head = path.moved_position(s[0], path.direction(s[1], s[0]))
         if next_head == head:
@@ -134,12 +133,13 @@ def _possibilities(b):
     return update_fn
 
 
-def _smallest_snake(self_id, snakes, smaller_than=math.inf):
+def _smallest_snake(self_id, snakes, smaller_than=math.inf, friendlies=None):
     smallest = None
     smallest_size = math.inf
     for (sid, snake) in snakes.items():
-        if sid != self_id and len(snake) < smallest_size and \
-           (len(snake) < smaller_than):
+        if (sid != self_id and not friendlies[sid]
+           and len(snake) < smallest_size and
+           len(snake) < smaller_than):
             smallest_size = len(snake)
             smallest = sid
     return smallest

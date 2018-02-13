@@ -1,23 +1,30 @@
 import flask
 import json
 import snake
+import util
 
 app = flask.Flask(__name__)
 
-snake_info = {
-    'name': 'coldog',
-    'color': '#4286f4',
-}
+
+def snake_info():
+    return {
+        'name': f'coldog-{util.random_word()}-{util.random_word()}',
+        'color': util.random_hex(),
+        'head_type': 'bendr',
+        'tail_type': 'curled',
+        'secondary_color': util.random_hex(),
+        'head_url': 'https://storage.googleapis.com/gopherizeme.appspot.com/gophers/d4990cb1e43574d3651384bb01e157aece51aad5.png',
+    }
 
 
 @app.route('/')
 def index():
-    return flask.jsonify(snake_info)
+    return flask.jsonify(snake_info())
 
 
 @app.route('/start', methods=['GET', 'POST'])
 def start():
-    return flask.jsonify(snake_info)
+    return flask.jsonify(snake_info())
 
 
 @app.route('/move', methods=['GET', 'POST'])
@@ -36,15 +43,19 @@ def move():
             for s in state['snakes']['data']
         },
         health=state['you']['health'],
+        friendlies={
+            s['id']: s['name'].startswith('coldog-')
+            for s in state['snakes']['data']
+        },
     )
     direction = snake.move(**game_state)
     return json.dumps({'move': direction})
 
 
 def game(id=None, snakes=None, food=None, height=None, width=None,
-         health=None):
+         health=None, friendlies=None):
     return dict(id=id, snakes=snakes, food=food, height=height, width=width,
-                health=health)
+                health=health, friendlies=friendlies)
 
 
 def converter(w, h):
