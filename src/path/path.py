@@ -126,7 +126,7 @@ def corners(height, width):
 
 def size(g):
     """ Returns (width, height) """
-    return (len(g), len(g[0]))
+    return (len(g[0]), len(g))
 
 
 def at_edge(g, target):

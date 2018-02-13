@@ -13,6 +13,7 @@ def test_weighted_mover():
         height=10,
         width=10,
         health=10,
+        friendlies={'1': True, '2': False},
     )
     board.pretty_print(board.draw(**state))
     # Direction up because that's where the nearest food is.
@@ -31,6 +32,7 @@ def test_weighted_move_around_snake():
         height=10,
         width=10,
         health=10,
+        friendlies={'1': True, '2': False},
     )
     board.pretty_print(board.draw(**state))
     assert move(**state) == 'down'

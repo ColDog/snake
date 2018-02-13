@@ -8,6 +8,7 @@ from .path import (
     walk,
     direction,
     moved_position,
+    size,
 )
 
 
@@ -56,3 +57,10 @@ def test_matrix_cost():
         return 1
     m = matrix(10, 10, (0, 0), cost_fn=cost_fn)
     pretty_print(m)
+
+
+def test_size():
+    m = matrix(16, 21, (0, 0), cost_fn=default_cost_fn)
+    w, h = size(m)
+    assert w == 21
+    assert h == 16
