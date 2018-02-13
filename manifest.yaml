@@ -1,0 +1,41 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: snake
+  namespace: default
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: snake
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: snake
+  namespace: default
+  labels:
+    app: snake
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: snake
+  template:
+    metadata:
+      labels:
+        app: snake
+    spec:
+      containers:
+      - name: nginx
+        image: coldog/snake:VERSION
+        ports:
+        - containerPort: 80
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 3
+          periodSeconds: 3

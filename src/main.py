@@ -4,13 +4,20 @@ import snake
 
 app = flask.Flask(__name__)
 
+snake_info = {
+    'name': 'coldog',
+    'color': '#4286f4',
+}
+
+
+@app.route('/')
+def index():
+    return flask.jsonify(snake_info)
+
 
 @app.route('/start', methods=['GET', 'POST'])
 def start():
-    return flask.jsonify({
-        'name': 'coldog-snake',
-        'color': '#4286f4',
-    })
+    return flask.jsonify(snake_info)
 
 
 @app.route('/move', methods=['GET', 'POST'])
