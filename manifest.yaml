@@ -39,3 +39,17 @@ spec:
             port: 80
           initialDelaySeconds: 3
           periodSeconds: 3
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: snake-VERSION
+  namespace: default
+spec:
+  maxReplicas: 20
+  minReplicas: 5
+  scaleTargetRef:
+    apiVersion: extensions/v1beta1
+    kind: Deployment
+    name: snake-VERSION
+  targetCPUUtilizationPercentage: 25

@@ -18,6 +18,9 @@ build:
 deploy:
 	cat manifest.yaml | sed "s/VERSION/$(VERSION)/" | kubectl apply -f -
 
+render:
+	cat manifest.yaml | sed "s/VERSION/$(VERSION)/"
+
 restart:
 	kubectl get pods -o json | jq -r '.items[].metadata.name' | grep snake | xargs kubectl delete pod
 
