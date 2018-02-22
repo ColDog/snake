@@ -4,7 +4,7 @@ run:
 	cd src/ && python main.py
 
 test:
-	cd src/ && pytest
+	cd src/ && pytest $(ARGS)
 
 lint:
 	flake8 src/

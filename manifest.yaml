@@ -1,7 +1,7 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: snake
+  name: snake-VERSION
   namespace: default
 spec:
   type: LoadBalancer
@@ -9,24 +9,24 @@ spec:
   - port: 80
     targetPort: 80
   selector:
-    app: snake
+    app: snake-VERSION
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: snake
+  name: snake-VERSION
   namespace: default
   labels:
-    app: snake
+    app: snake-VERSION
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: snake
+      app: snake-VERSION
   template:
     metadata:
       labels:
-        app: snake
+        app: snake-VERSION
     spec:
       containers:
       - name: nginx

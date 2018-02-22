@@ -1,6 +1,7 @@
 import math
 import path
 import board
+import copy
 
 
 def move(id=None, snakes=None, food=None, height=None, width=None,
@@ -19,6 +20,7 @@ def _ideal_path(id=None, snakes=None, food=None, height=None, width=None,
                 health=None, friendlies=None):
     head = snakes[id][0]
     tail = snakes[id][-1]
+    size = len(snakes[id])
     matrix = _weights(id, snakes, food, height, width)
 
     path.pretty_print(matrix, current=head)
@@ -28,12 +30,12 @@ def _ideal_path(id=None, snakes=None, food=None, height=None, width=None,
     # Retrieves smallest non friendly snake.
     smallest, smallest_size = _smallest_snake(id, snakes, friendlies)
 
-    # If needs to eat.
-    if health < min((width, height)) * 2 or len(snakes[id]) < smallest_size:
+    # If needs to eat add food to the tiers.
+    if health < min((width, height)) * 2 or size < smallest_size:
         target_tiers.append(('food', food))
 
-    # Found a snake we could eat.
-    if smallest is not None:
+    # Found a snake we could eat that is smaller than ourselves.
+    if smallest is not None and smallest_size < size:
         s = snakes[smallest]
         next_head = path.moved_position(s[0], path.direction(s[1], s[0]))
         if next_head == head:
@@ -42,6 +44,8 @@ def _ideal_path(id=None, snakes=None, food=None, height=None, width=None,
 
     # Add the tail to the tier always.
     target_tiers.append(('tail', [tail]))
+
+    # Add all corners on the board.
     target_tiers.append(('corners', path.corners(height, width)))
 
     target = None
@@ -50,8 +54,21 @@ def _ideal_path(id=None, snakes=None, food=None, height=None, width=None,
         for t in tier:
             cost = path.cost(matrix, head, t)
             if cost < target_cost:
-                target_cost = cost
-                target = t
+                route = path.walk(matrix, head, t)
+                if route is None:
+                    print("None route")
+                if route:
+                    forward_state = _play_forward(
+                        route, id=id, snakes=copy.deepcopy(snakes),
+                        food=food[:], height=height, width=width,
+                    )
+                    forward_head = forward_state['snakes'][id][0]
+                    forward_tail = forward_state['snakes'][id][-1]
+                    if _safe_path(forward_head, forward_tail, **forward_state):
+                        target_cost = cost
+                        target = t
+                    else:
+                        print('no safe path to tail')
         if target_cost != math.inf:
             print('tier success', name, target_cost)
             break
@@ -75,9 +92,9 @@ def _safe_local(id=None, snakes=None, food=None, height=None, width=None):
     g = board.draw(id=id, snakes=snakes, food=food, height=height, width=width)
     w, h = path.size(g)
     for (x, y) in path.neighbours(head, h, w):
-        if (g[y][x].type == board.TYPES.EMPTY or
-           g[y][x].type == board.TYPES.FOOD):
-            return [head, (x, y)]
+        if g[y][x].type == board.TYPES.SNAKE:
+            continue
+        return [head, (x, y)]
     return None
 
 
@@ -89,51 +106,41 @@ def _weights(id=None, snakes=None, food=None, height=None, width=None):
         height=height,
         width=width,
         initial=head,
-        cost_fn=_cost(g, id, len(snakes[id])),
-        poss_fn=_possibilities(g, id),
+        cost_fn=_cost(g, snakes, id),
     )
     return matrix
 
 
-def _cost(g, self_id, self_size):
+def _cost(g, snakes, self_id):
+    """
+    Returns a cost function with the following attributes:
+    * If the square has only 1 exit between snakes and walls, it is an infinite
+      cost.
+    * If the square contains a snake it is an infinite square, unless it is a
+      snakes tail and that snake can not eat in the next turn.
+    * If the square is within range of a snake that is larger than itself.
+    """
     w, h = path.size(g)
+    self_size = len(snakes[self_id])
 
     def cost_fn(current, candidate):
         x, y = candidate
-        if g[y][x].type == board.TYPES.SNAKE and not g[y][x].tail:
-            return math.inf
-        cost = 1
-        if path.at_edge(g, (x, y)):
-            cost += 200
-        parent = g[y][x]
+
+        n = g[y][x]
+        if n.type == board.TYPES.SNAKE:
+            if not n.tail:
+                return math.inf
+            if n.tail and _about_to_eat(g, snakes[n.id][0]) and \
+               n.id != self_id:
+                return math.inf
         for (nx, ny) in path.neighbours(candidate, h, w):
             n = g[ny][nx]
-            if n.id != self_id and n.type == board.TYPES.SNAKE:
-                cost += 100
-            if parent.type == board.TYPES.FOOD and n.type == board.TYPES.SNAKE and n.size > self_size:
-                return math.inf
-        return cost
+            if n.head and n.size >= self_size and n.id != self_id:
+                return 100
+            if path.at_edge(g, (nx, ny)):
+                return 10
+        return 1
     return cost_fn
-
-
-def _possibilities(b, self_id):
-    w, h = path.size(b)
-
-    def update_fn(target, cost, matrix):
-        x, y = target
-        if cost == math.inf:
-            return cost
-        impossible_neighbours = 0
-        for (nx, ny) in path.neighbours_with_off_board((x, y), h, w):
-            if (path.off_board(b, (nx, ny)) or (
-                   b[ny][nx].type == board.TYPES.SNAKE and not
-                   (b[ny][nx].head and b[ny][nx].id == self_id)
-               ) or matrix[ny][nx][1] == math.inf):
-                impossible_neighbours += 1
-        if impossible_neighbours >= 3:
-            return 2000
-        return cost
-    return update_fn
 
 
 def _smallest_snake(self_id, snakes, friendlies=None):
@@ -145,3 +152,33 @@ def _smallest_snake(self_id, snakes, friendlies=None):
             smallest_size = len(snake)
             smallest = sid
     return smallest, smallest_size
+
+
+def _about_to_eat(g, head):
+    w, h = path.size(g)
+    for (nx, ny) in path.neighbours(head, h, w):
+        if g[ny][nx].type == board.TYPES.FOOD:
+            return True
+    return False
+
+
+def _play_forward(route, **state):
+    id = state['id']
+    snakes = state['snakes']
+    food = state['food']
+    snake = snakes[id]
+    for move in route:
+        if move in food:
+            food.remove(move)
+            snakes[id] = [move] + snake
+        else:
+            snakes[id] = [move] + snake[:-1]
+    state['id'] = id
+    state['snakes'] = snakes
+    state['food'] = food
+    return state
+
+
+def _safe_path(initial, target, **state):
+    matrix = _weights(**state)
+    return path.cost(matrix, initial, target) != math.inf

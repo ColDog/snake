@@ -8,7 +8,7 @@ def default_cost_fn(current, candidate):
     return 1
 
 
-def matrix(height, width, initial, cost_fn=None, poss_fn=None):
+def matrix(height, width, initial, cost_fn=None):
     """
     Matrix builds up a matrix from the initial node showing the cost to reach
     every node in the graph in an optimial path. This can be inspected by using
@@ -45,27 +45,7 @@ def matrix(height, width, initial, cost_fn=None, poss_fn=None):
             alt = cur_cost + cost_fn(cur, n)
             if alt < grid[n[1]][n[0]][1]:
                 grid[n[1]][n[0]] = (cur, alt)
-    if poss_fn:
-        _paint_possibilites(grid, poss_fn)
     return grid
-
-
-def _paint_possibilites(grid, poss_func):
-    print('painting')
-    while True:
-        changed = False
-        w, h = size(grid)
-        for y in range(h):
-            for x in range(w):
-                prev, cost = grid[y][x]
-                if cost == math.inf:
-                    continue
-                new_cost = poss_func((x, y), cost, grid)
-                if new_cost != cost:
-                    grid[y][x] = (prev, new_cost)
-                    changed = True
-        if not changed:
-            return
 
 
 def walk(grid, initial, target):
