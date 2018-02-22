@@ -29,8 +29,9 @@ spec:
         app: snake-VERSION
     spec:
       containers:
-      - name: nginx
+      - name: snake
         image: coldog/snake:VERSION
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
         livenessProbe:

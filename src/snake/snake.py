@@ -125,7 +125,6 @@ def _cost(g, snakes, self_id):
 
     def cost_fn(current, candidate):
         x, y = candidate
-
         n = g[y][x]
         if n.type == board.TYPES.SNAKE:
             if not n.tail:
@@ -133,13 +132,18 @@ def _cost(g, snakes, self_id):
             if n.tail and _about_to_eat(g, snakes[n.id][0]) and \
                n.id != self_id:
                 return math.inf
+        cost = 1
         for (nx, ny) in path.neighbours(candidate, h, w):
             n = g[ny][nx]
             if n.head and n.size >= self_size and n.id != self_id:
-                return 100
+                direction = path.direction(snakes[n.id][1], snakes[n.id][0])
+                pos = path.moved_position((nx, ny), direction)
+                if pos == (x, y):
+                    return math.inf
+                cost += 100
             if path.at_edge(g, (nx, ny)):
-                return 10
-        return 1
+                cost += 10
+        return cost
     return cost_fn
 
 
