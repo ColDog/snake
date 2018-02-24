@@ -23,7 +23,7 @@ def _ideal_path(id=None, snakes=None, food=None, height=None, width=None,
     size = len(snakes[id])
     matrix = _weights(id, snakes, food, height, width)
 
-    path.pretty_print(matrix, current=head)
+    # path.pretty_print(matrix, current=head)
 
     target_tiers = []
 
@@ -56,7 +56,7 @@ def _ideal_path(id=None, snakes=None, food=None, height=None, width=None,
             if cost < target_cost:
                 route = path.walk(matrix, head, t)
                 if route is None:
-                    print("None route")
+                    print('none route')
                 if route:
                     forward_state = _play_forward(
                         route, id=id, snakes=copy.deepcopy(snakes),
@@ -68,12 +68,22 @@ def _ideal_path(id=None, snakes=None, food=None, height=None, width=None,
                         target_cost = cost
                         target = t
                     else:
-                        print('no safe path to tail')
+                        print('tier no safe path to tail', name, t)
         if target_cost != math.inf:
             print('tier success', name, target_cost)
             break
         print('tier failed', name, target_cost, tier)
 
+    # Go for the lowest local cost.
+    if target_cost == math.inf:
+        print('local lowest')
+        for t in path.neighbours(head, width, height):
+            cost = path.cost(matrix, head, t)
+            if cost < target_cost:
+                target_cost = cost
+                target = t
+
+    # Go for a safe local square.
     if target_cost == math.inf:
         print('safe local')
         return _safe_local(
@@ -83,6 +93,7 @@ def _ideal_path(id=None, snakes=None, food=None, height=None, width=None,
             height=height,
             width=width,
         )
+
     route = path.walk(matrix, head, target)
     return route
 
@@ -136,11 +147,7 @@ def _cost(g, snakes, self_id):
         for (nx, ny) in path.neighbours(candidate, h, w):
             n = g[ny][nx]
             if n.head and n.size >= self_size and n.id != self_id:
-                direction = path.direction(snakes[n.id][1], snakes[n.id][0])
-                pos = path.moved_position((nx, ny), direction)
-                if pos == (x, y):
-                    return math.inf
-                cost += 100
+                return math.inf
             if path.at_edge(g, (nx, ny)):
                 cost += 10
         return cost
