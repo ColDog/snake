@@ -34,3 +34,6 @@ render:
 external-ip:
 	@kubectl get svc/snake-$(VERSION) -o json | jq -r '.status.loadBalancer.ingress[0].ip'
 .PHONY: external-ip
+
+release: build deploy external-ip
+.PHONY: release
