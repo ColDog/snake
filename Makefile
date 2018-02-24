@@ -1,4 +1,5 @@
 VERSION := $(shell cat version)
+COMMIT := $(shell git rev-parse --short HEAD)
 
 run:
 	cd src/ && python main.py
@@ -13,23 +14,25 @@ lint:
 .PHONY: lint
 
 build:
-	docker build -t coldog/snake:$(VERSION) .
-	docker tag coldog/snake:$(VERSION) coldog/snake:latest
+	docker build -t coldog/snake:$(COMMIT) .
+	docker tag coldog/snake:$(COMMIT) coldog/snake:latest
+	docker tag coldog/snake:$(COMMIT) coldog/snake:$(VERSION)
+	docker push coldog/snake:$(COMMIT)
 	docker push coldog/snake:$(VERSION)
 	docker push coldog/snake:latest
 .PHONY: build
 
+render:
+	@cat manifest.yaml | sed "s/VERSION/$(VERSION)/" | sed "s/COMMIT/$(COMMIT)/"
+.PHONY: render
+
 deploy:
-	cat manifest.yaml | sed "s/VERSION/$(VERSION)/" | kubectl apply -f -
+	make render | kubectl apply -f -
 .PHONY: deploy
 
 delete:
-	cat manifest.yaml | sed "s/VERSION/$(VERSION)/" | kubectl delete -f -
+	make render | kubectl delete -f -
 .PHONY: delete
-
-render:
-	cat manifest.yaml | sed "s/VERSION/$(VERSION)/"
-.PHONY: render
 
 external-ip:
 	@kubectl get svc/snake-$(VERSION) -o json | jq -r '.status.loadBalancer.ingress[0].ip'

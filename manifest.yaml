@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
       - name: snake
-        image: coldog/snake:VERSION
+        image: coldog/snake:COMMIT
         imagePullPolicy: Always
         ports:
         - containerPort: 80
