@@ -27,18 +27,15 @@ def _ideal_path(id=None, snakes=None, food=None, height=None, width=None,
     size = len(snakes[id])
     matrix = _weights(id, snakes, food, height, width)
 
-    # path.pretty_print(matrix, current=head)
+    path.pretty_print(matrix, current=head)
 
     target_tiers = []
 
     # Retrieves smallest non friendly snake.
     smallest, smallest_size = _smallest_snake(id, snakes, friendlies)
 
-    # If needs to eat add food to the tiers.
-    if BEHAVIOURS.eat_only_when_hungy:
-        if health < min((width, height)) * 2 or size < smallest_size:
-            target_tiers.append(('food', food))
-    else:
+    # Eat if hungry.
+    if health < min((width, height)) * 2:
         target_tiers.append(('food', food))
 
     # Found a snake we could eat that is smaller than ourselves.
@@ -48,6 +45,9 @@ def _ideal_path(id=None, snakes=None, food=None, height=None, width=None,
         if next_head == head:
             next_head = s[0]
         target_tiers.append(('attack', [next_head]))
+
+    # Always add food at this level.
+    target_tiers.append(('food', food))
 
     # Add the tail to the tier always.
     target_tiers.append(('tail', [tail]))
@@ -155,8 +155,6 @@ def _cost(g, snakes, self_id):
             n = g[ny][nx]
             if n.head and n.size >= self_size and n.id != self_id:
                 return math.inf
-            if path.at_edge(g, (nx, ny)):
-                cost += 10
         return cost
     return cost_fn
 
