@@ -4,6 +4,10 @@ import board
 import copy
 
 
+class BEHAVIOURS:
+    eat_only_when_hungy = False
+
+
 def move(id=None, snakes=None, food=None, height=None, width=None,
          health=None, friendlies=None):
     route = _ideal_path(id, snakes, food, height, width, health, friendlies)
@@ -31,7 +35,10 @@ def _ideal_path(id=None, snakes=None, food=None, height=None, width=None,
     smallest, smallest_size = _smallest_snake(id, snakes, friendlies)
 
     # If needs to eat add food to the tiers.
-    if health < min((width, height)) * 2 or size < smallest_size:
+    if BEHAVIOURS.eat_only_when_hungy:
+        if health < min((width, height)) * 2 or size < smallest_size:
+            target_tiers.append(('food', food))
+    else:
         target_tiers.append(('food', food))
 
     # Found a snake we could eat that is smaller than ourselves.
