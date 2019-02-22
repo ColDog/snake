@@ -2,6 +2,7 @@ import flask
 import json
 import snake
 import util
+import os
 
 app = flask.Flask(__name__)
 
@@ -30,22 +31,23 @@ def start():
 @app.route('/move', methods=['GET', 'POST'])
 def move():
     state = flask.request.json
-    convert = converter(state['width'], state['height'])
+    board = state['board']
+    convert = converter(board['width'], board['height'])
     game_state = game(
         id=state['you']['id'],
-        width=state['width'],
-        height=state['height'],
-        food=[convert(f['x'], f['y']) for f in state['food']['data']],
+        width=board['width'],
+        height=board['height'],
+        food=[convert(f['x'], f['y']) for f in board['food']],
         snakes={
             s['id']: [
-                convert(f['x'], f['y']) for f in s['body']['data']
+                convert(f['x'], f['y']) for f in s['body']
             ]
-            for s in state['snakes']['data']
+            for s in board['snakes']
         },
         health=state['you']['health'],
         friendlies={
             s['id']: s['name'].startswith('coldog-')
-            for s in state['snakes']['data']
+            for s in board['snakes']
         },
     )
     direction = snake.move(**game_state)
@@ -65,4 +67,5 @@ def converter(w, h):
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=8090, debug=True)
+    port = os.environ.get("PORT", "8080")
+    app.run(host='0.0.0.0', port=int(port), debug=True)
