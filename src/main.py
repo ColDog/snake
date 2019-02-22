@@ -31,6 +31,8 @@ def start():
 @app.route('/move', methods=['GET', 'POST'])
 def move():
     state = flask.request.json
+    print('request', state)
+
     board = state['board']
     convert = converter(board['width'], board['height'])
     game_state = game(
