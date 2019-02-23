@@ -13,10 +13,10 @@ def move(id=None, snakes=None, food=None, height=None, width=None,
     route = _ideal_path(id, snakes, food, height, width, health, friendlies)
     head = snakes[id][0]
     if route is None or route[1] is None:
-        # print('->', 'FAILED')
+        print('->', 'FAILED')
         return path.MOVES.UP
     move = path.direction(head, route[1])
-    # print('->', move)
+    print('->', move)
     return move
 
 
@@ -71,15 +71,15 @@ def _ideal_path(id=None, snakes=None, food=None, height=None, width=None,
                         target_cost = cost
                         target = t
                     else:
-                        # print('tier no safe path to tail', name, t)
+                        print('tier no safe path to tail', name, t)
         if target_cost != math.inf:
-            # print('tier success', name, target_cost)
+            print('tier success', name, target_cost)
             break
-        # print('tier failed', name, target_cost, tier)
+        print('tier failed', name, target_cost, tier)
 
     # Go for the lowest local cost.
     if target_cost == math.inf:
-        # print('local lowest')
+        print('local lowest')
         for t in path.neighbours(head, width, height):
             cost = path.cost(matrix, head, t)
             if cost < target_cost:
@@ -88,7 +88,7 @@ def _ideal_path(id=None, snakes=None, food=None, height=None, width=None,
 
     # Go for a safe local square.
     if target_cost == math.inf:
-        # print('safe local')
+        print('safe local')
         return _safe_local(
             id=id,
             snakes=snakes,
