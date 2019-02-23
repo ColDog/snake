@@ -60,8 +60,6 @@ def _ideal_path(id=None, snakes=None, food=None, height=None, width=None,
             cost = path.cost(matrix, head, t)
             if cost < target_cost:
                 route = path.walk(matrix, head, t)
-                if route is None:
-                    # print('none route')
                 if route:
                     forward_state = _play_forward(
                         route, id=id, snakes=copy.deepcopy(snakes),
